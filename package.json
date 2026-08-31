@@ -1,0 +1,16 @@
+{
+  "name": "@biomejs/benchmark-fixtures",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Deterministic generated fixtures for Biome performance benchmarks",
+  "type": "module",
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "scripts": {
+    "generate": "node generate.mjs",
+    "check": "node generate.mjs --check",
+    "test": "node generate.mjs --self-test"
+  },
+  "license": "MIT"
+}
