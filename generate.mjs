@@ -137,6 +137,32 @@ export const FILE_CONFIGS = Object.freeze([
     targetBytes: 192 * 1024,
   },
 ]);
+const LEGACY_FILE_CONTRACTS = Object.freeze({
+  "full-spectrum": Object.freeze({
+    bytes: 524455,
+    sha256: "4acc61349b938b3749807198149c24f301e6ba45b82e0ee0bf5e9b4b2c8cd128",
+  }),
+  "hot-ambiguous-nested-rules": Object.freeze({
+    bytes: 196740,
+    sha256: "d7e6befec42345bb9ecf772f34d8f088f5a6c275a550c2812b4ade672eb6ea4d",
+  }),
+  "hot-url-interpolation": Object.freeze({
+    bytes: 131316,
+    sha256: "39bd9ccc11202795e2eee44d50e3cdf9a65a9fd5b591b301c7e6e484cf798aa0",
+  }),
+  "hot-interpolated-strings": Object.freeze({
+    bytes: 131108,
+    sha256: "7b4e6526be544814bb0301fa6e57ea2e7feda53f447dc4e120d4a0b9b1417e01",
+  }),
+  "hot-tight-binary-expressions": Object.freeze({
+    bytes: 196711,
+    sha256: "bc57ec80271af66d3cb09dc6ea895159851e46d05eb746e32004f24bf376441a",
+  }),
+  "hot-lists-maps-arguments": Object.freeze({
+    bytes: 196691,
+    sha256: "a0362f8178dc5e94fd3ef1ed0348e016c9223ed8d97c0d859d25785af72d4a17",
+  }),
+});
 const HOTPATH_ALLOWED_IDS = Object.freeze({
   "hot-ambiguous-nested-rules": ["hot.ambiguous-nested-rules"],
   "hot-url-interpolation": ["hot.url-interpolation"],
@@ -1247,6 +1273,12 @@ export function runSelfTests() {
   }
 
   const corpus = buildCorpus();
+  for (const [id, expected] of Object.entries(LEGACY_FILE_CONTRACTS)) {
+    const file = corpus.files.get(id);
+    assert.ok(file !== undefined, id);
+    assert.equal(utf8Bytes(file.source), expected.bytes, `${id}: bytes`);
+    assert.equal(sha256(file.source), expected.sha256, `${id}: sha256`);
+  }
   assert.equal(corpus.generatorVersion, GENERATOR_VERSION);
   assert.deepEqual(
     [...corpus.files.keys()],
