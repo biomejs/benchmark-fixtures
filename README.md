@@ -4,7 +4,7 @@ Deterministic generated fixtures for Biome performance benchmarks.
 
 ## SCSS corpus
 
-The corpus contains one broad syntax-coverage file and five focused files for source-mechanic performance candidates. The files are generated artifacts; edit `generate.mjs`, not files under `generated/`.
+The corpus contains one broad syntax-coverage file and eleven focused files for source-mechanic performance candidates. The files are generated artifacts; edit `generate.mjs`, not files under `generated/`.
 
 | File | Purpose |
 | --- | --- |
@@ -14,6 +14,12 @@ The corpus contains one broad syntax-coverage file and five focused files for so
 | `generated/hot-interpolated-strings.scss` | Segmented interpolated strings. |
 | `generated/hot-tight-binary-expressions.scss` | Tight operators and precedence loops. |
 | `generated/hot-lists-maps-arguments.scss` | Large expression collections and arguments. |
+| `generated/hot-tight-operators.scss` | Source-tight binary operator chains. |
+| `generated/hot-operator-precedence.scss` | Mixed unary and binary precedence. |
+| `generated/hot-lists.scss` | Dense space- and comma-separated lists. |
+| `generated/hot-maps.scss` | Dense nested map expressions. |
+| `generated/hot-arguments.scss` | Dense positional, rest, and keyword arguments. |
+| `generated/hot-url-interpolation-direct.scss` | Direct interpolated URLs without a surrounding style rule. |
 
 These focused files are candidates for measuring parser hot paths. Benchmark data must establish their runtime importance.
 
@@ -32,7 +38,7 @@ npm test
 npm run check
 ```
 
-`manifest.json` records stable sizes, SHA-256 hashes, seeds, and syntax counts. Generation contains no timestamps or machine-specific data.
+`manifest.json` records target and actual sizes, line and case counts, SHA-256 hashes, seeds, and syntax counts. Generation contains no timestamps or machine-specific data.
 
 ## Consumption
 

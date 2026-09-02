@@ -13,7 +13,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
-export const GENERATOR_VERSION = 2;
+export const GENERATOR_VERSION = 3;
 export const DEFAULT_SEED = 0x5c55c0de;
 export const CORE_SYNTAX_IDS = Object.freeze([
   "decl.variable.local",
@@ -136,13 +136,75 @@ export const FILE_CONFIGS = Object.freeze([
     path: "generated/hot-lists-maps-arguments.scss",
     targetBytes: 192 * 1024,
   },
+  {
+    id: "hot-tight-operators",
+    path: "generated/hot-tight-operators.scss",
+    targetBytes: 128 * 1024,
+  },
+  {
+    id: "hot-operator-precedence",
+    path: "generated/hot-operator-precedence.scss",
+    targetBytes: 128 * 1024,
+  },
+  {
+    id: "hot-lists",
+    path: "generated/hot-lists.scss",
+    targetBytes: 128 * 1024,
+  },
+  {
+    id: "hot-maps",
+    path: "generated/hot-maps.scss",
+    targetBytes: 128 * 1024,
+  },
+  {
+    id: "hot-arguments",
+    path: "generated/hot-arguments.scss",
+    targetBytes: 128 * 1024,
+  },
+  {
+    id: "hot-url-interpolation-direct",
+    path: "generated/hot-url-interpolation-direct.scss",
+    targetBytes: 128 * 1024,
+  },
 ]);
+const LEGACY_FILE_CONTRACTS = Object.freeze({
+  "full-spectrum": Object.freeze({
+    bytes: 524455,
+    sha256: "4acc61349b938b3749807198149c24f301e6ba45b82e0ee0bf5e9b4b2c8cd128",
+  }),
+  "hot-ambiguous-nested-rules": Object.freeze({
+    bytes: 196740,
+    sha256: "d7e6befec42345bb9ecf772f34d8f088f5a6c275a550c2812b4ade672eb6ea4d",
+  }),
+  "hot-url-interpolation": Object.freeze({
+    bytes: 131316,
+    sha256: "39bd9ccc11202795e2eee44d50e3cdf9a65a9fd5b591b301c7e6e484cf798aa0",
+  }),
+  "hot-interpolated-strings": Object.freeze({
+    bytes: 131108,
+    sha256: "7b4e6526be544814bb0301fa6e57ea2e7feda53f447dc4e120d4a0b9b1417e01",
+  }),
+  "hot-tight-binary-expressions": Object.freeze({
+    bytes: 196711,
+    sha256: "bc57ec80271af66d3cb09dc6ea895159851e46d05eb746e32004f24bf376441a",
+  }),
+  "hot-lists-maps-arguments": Object.freeze({
+    bytes: 196691,
+    sha256: "a0362f8178dc5e94fd3ef1ed0348e016c9223ed8d97c0d859d25785af72d4a17",
+  }),
+});
 const HOTPATH_ALLOWED_IDS = Object.freeze({
   "hot-ambiguous-nested-rules": ["hot.ambiguous-nested-rules"],
   "hot-url-interpolation": ["hot.url-interpolation"],
   "hot-interpolated-strings": ["hot.interpolated-strings"],
   "hot-tight-binary-expressions": ["hot.tight-binary", "hot.precedence"],
   "hot-lists-maps-arguments": ["hot.list", "hot.map", "hot.arguments"],
+  "hot-tight-operators": ["hot.tight-operators"],
+  "hot-operator-precedence": ["hot.operator-precedence"],
+  "hot-lists": ["hot.lists"],
+  "hot-maps": ["hot.maps"],
+  "hot-arguments": ["hot.arguments-direct"],
+  "hot-url-interpolation-direct": ["hot.url-interpolation-direct"],
 });
 
 export function createRng(seed) {
@@ -977,6 +1039,42 @@ const HOTPATH_RENDERERS = Object.freeze({
   ]),
 });
 
+const DENSE_FILE_HEADER = "/* Generated benchmark fixture. Do not edit. */\n";
+
+const DENSE_HOTPATH_RENDERERS = Object.freeze({
+  "hot-tight-operators": Object.freeze({
+    id: "hot.tight-operators",
+    preamble: "",
+    render: (name) =>
+      `$x${name}:1px+2px+3px+4px+5px+6px+7px+8px+9px+10px;\n`,
+  }),
+  "hot-operator-precedence": Object.freeze({
+    id: "hot.operator-precedence",
+    preamble: "",
+    render: (name) => `$x${name}:-1px+2px*3-4px/2;\n`,
+  }),
+  "hot-lists": Object.freeze({
+    id: "hot.lists",
+    preamble: "",
+    render: (name) => `$x${name}:a b c d,e f g h;\n`,
+  }),
+  "hot-maps": Object.freeze({
+    id: "hot.maps",
+    preamble: "",
+    render: (name) => `$x${name}:(a:1,b:(c:2,d:3),e:(f:4,g:5));\n`,
+  }),
+  "hot-arguments": Object.freeze({
+    id: "hot.arguments-direct",
+    preamble: "$a:1px,2px,3px;\n",
+    render: (name) => `$x${name}:fn(0,$a...,$w:1px,$h:2px);\n`,
+  }),
+  "hot-url-interpolation-direct": Object.freeze({
+    id: "hot.url-interpolation-direct",
+    preamble: "$v:asset;\n",
+    render: (name) => `$u${name}:url(a-#{$v}-#{fn("x")}.png);\n`,
+  }),
+});
+
 function renderMarked(entry, fileId, context) {
   const nameOrdinal = (context.nameOffset + context.ordinal) % 1_000_000;
   const name = `${fileId.replaceAll("-", "_")}_${String(nameOrdinal).padStart(6, "0")}`;
@@ -1089,14 +1187,59 @@ function buildFocusedCorpus(config, seed) {
   };
 }
 
+function buildDenseCorpus(config, seed) {
+  const renderer = DENSE_HOTPATH_RENDERERS[config.id];
+  assert.ok(renderer !== undefined, config.id);
+  assert.deepEqual(HOTPATH_ALLOWED_IDS[config.id], [renderer.id], config.id);
+
+  const counts = new Map();
+  const rng = createRng(seed);
+  const nameOffset = Math.floor(rng() * 1_000_000);
+  const blocks = [DENSE_FILE_HEADER];
+  let byteLength = utf8Bytes(DENSE_FILE_HEADER);
+  let previousByteLength = byteLength;
+  let ordinal = 1;
+
+  if (renderer.preamble.length > 0) {
+    blocks.push(renderer.preamble);
+    byteLength += utf8Bytes(renderer.preamble);
+  }
+
+  while (byteLength < config.targetBytes) {
+    previousByteLength = byteLength;
+    const name = ((nameOffset + ordinal) % 1_000_000).toString(36);
+    const block = renderer.render(name);
+    assert.ok(block.endsWith("\n"), config.id);
+    blocks.push(block);
+    byteLength += utf8Bytes(block);
+    counts.set(renderer.id, (counts.get(renderer.id) ?? 0) + 1);
+    ordinal += 1;
+  }
+
+  assert.ok(previousByteLength < config.targetBytes, config.id);
+  assert.ok(byteLength >= config.targetBytes, config.id);
+
+  return {
+    id: config.id,
+    path: config.path,
+    seed,
+    source: blocks.join(""),
+    counts,
+  };
+}
+
 export function buildCorpus(seed = DEFAULT_SEED) {
   const normalizedSeed = seed >>> 0;
   const files = new Map();
   for (const config of FILE_CONFIGS) {
-    const file =
-      config.id === "full-spectrum"
-        ? buildFullSpectrum(config, normalizedSeed)
-        : buildFocusedCorpus(config, normalizedSeed);
+    let file;
+    if (config.id === "full-spectrum") {
+      file = buildFullSpectrum(config, normalizedSeed);
+    } else if (DENSE_HOTPATH_RENDERERS[config.id] !== undefined) {
+      file = buildDenseCorpus(config, normalizedSeed);
+    } else {
+      file = buildFocusedCorpus(config, normalizedSeed);
+    }
     files.set(config.id, file);
   }
   return { files, generatorVersion: GENERATOR_VERSION, seed: normalizedSeed };
@@ -1120,9 +1263,15 @@ export function buildManifest(corpus) {
     files: FILE_CONFIGS.map((config) => {
       const file = corpus.files.get(config.id);
       assert.ok(file !== undefined, config.id);
+      const caseCount = [...file.counts.values()].reduce(
+        (total, count) => total + count,
+        0,
+      );
       return {
         id: file.id,
         path: file.path,
+        seed: file.seed,
+        caseCount,
         targetBytes: config.targetBytes,
         bytes: utf8Bytes(file.source),
         lines: countLines(file.source),
@@ -1205,6 +1354,46 @@ export function checkCorpus(root, corpus) {
 }
 
 export function runSelfTests() {
+  assert.equal(GENERATOR_VERSION, 3);
+  assert.deepEqual(
+    FILE_CONFIGS.slice(6).map(({ id, path, targetBytes }) => ({
+      id,
+      path,
+      targetBytes,
+    })),
+    [
+      {
+        id: "hot-tight-operators",
+        path: "generated/hot-tight-operators.scss",
+        targetBytes: 128 * 1024,
+      },
+      {
+        id: "hot-operator-precedence",
+        path: "generated/hot-operator-precedence.scss",
+        targetBytes: 128 * 1024,
+      },
+      {
+        id: "hot-lists",
+        path: "generated/hot-lists.scss",
+        targetBytes: 128 * 1024,
+      },
+      {
+        id: "hot-maps",
+        path: "generated/hot-maps.scss",
+        targetBytes: 128 * 1024,
+      },
+      {
+        id: "hot-arguments",
+        path: "generated/hot-arguments.scss",
+        targetBytes: 128 * 1024,
+      },
+      {
+        id: "hot-url-interpolation-direct",
+        path: "generated/hot-url-interpolation-direct.scss",
+        targetBytes: 128 * 1024,
+      },
+    ],
+  );
   const vectorRng = createRng(DEFAULT_SEED);
   assert.deepEqual(
     Array.from({ length: 8 }, () => Math.floor(vectorRng() * 0x100000000)),
@@ -1247,6 +1436,12 @@ export function runSelfTests() {
   }
 
   const corpus = buildCorpus();
+  for (const [id, expected] of Object.entries(LEGACY_FILE_CONTRACTS)) {
+    const file = corpus.files.get(id);
+    assert.ok(file !== undefined, id);
+    assert.equal(utf8Bytes(file.source), expected.bytes, `${id}: bytes`);
+    assert.equal(sha256(file.source), expected.sha256, `${id}: sha256`);
+  }
   assert.equal(corpus.generatorVersion, GENERATOR_VERSION);
   assert.deepEqual(
     [...corpus.files.keys()],
@@ -1288,6 +1483,13 @@ export function runSelfTests() {
   );
   for (const file of manifest.files) {
     assert.equal(typeof file.path, "string");
+    assert.equal(file.seed, DEFAULT_SEED);
+    assert.equal(typeof file.caseCount, "number");
+    assert.ok(file.caseCount > 0);
+    assert.equal(
+      file.caseCount,
+      Object.values(file.syntaxCounts).reduce((total, count) => total + count, 0),
+    );
     assert.equal(typeof file.targetBytes, "number");
     assert.equal(typeof file.bytes, "number");
     assert.ok(file.bytes > 0);
@@ -1315,6 +1517,35 @@ export function runSelfTests() {
     const manifestFile = manifest.files.find((file) => file.id === config.id);
     assert.ok(generatedFile !== undefined, config.id);
     assert.ok(manifestFile !== undefined, config.id);
+    const denseRenderer = DENSE_HOTPATH_RENDERERS[config.id];
+    if (denseRenderer !== undefined) {
+      assert.ok(generatedFile.source.startsWith(DENSE_FILE_HEADER), config.id);
+      assert.equal(
+        generatedFile.source.split(DENSE_FILE_HEADER).length - 1,
+        1,
+        config.id,
+      );
+      assert.equal(generatedFile.source.includes("/* corpus:"), false, config.id);
+      assert.deepEqual([...generatedFile.counts.keys()], [denseRenderer.id], config.id);
+      assert.deepEqual(HOTPATH_ALLOWED_IDS[config.id], [denseRenderer.id], config.id);
+      assert.equal(
+        manifestFile.caseCount,
+        generatedFile.counts.get(denseRenderer.id),
+        config.id,
+      );
+
+      const body = generatedFile.source.slice(
+        DENSE_FILE_HEADER.length + denseRenderer.preamble.length,
+      );
+      const cases = body.split("\n").filter((line) => line.length > 0);
+      assert.equal(cases.length, manifestFile.caseCount, config.id);
+      const finalCase = `${cases.at(-1)}\n`;
+      assert.ok(
+        utf8Bytes(generatedFile.source) - utf8Bytes(finalCase) < config.targetBytes,
+        `${config.id}: only the final case may cross the target`,
+      );
+      continue;
+    }
     const allowedIds =
       config.id === "full-spectrum"
         ? catalogIdSet

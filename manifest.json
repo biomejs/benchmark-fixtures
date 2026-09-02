@@ -1,11 +1,13 @@
 {
   "schemaVersion": 1,
-  "generatorVersion": 2,
+  "generatorVersion": 3,
   "seed": 1549123806,
   "files": [
     {
       "id": "full-spectrum",
       "path": "generated/full-spectrum.scss",
+      "seed": 1549123806,
+      "caseCount": 4735,
       "targetBytes": 524288,
       "bytes": 524455,
       "lines": 11053,
@@ -102,6 +104,8 @@
     {
       "id": "hot-ambiguous-nested-rules",
       "path": "generated/hot-ambiguous-nested-rules.scss",
+      "seed": 1549123806,
+      "caseCount": 1093,
       "targetBytes": 196608,
       "bytes": 196740,
       "lines": 5465,
@@ -113,6 +117,8 @@
     {
       "id": "hot-url-interpolation",
       "path": "generated/hot-url-interpolation.scss",
+      "seed": 1549123806,
+      "caseCount": 372,
       "targetBytes": 131072,
       "bytes": 131316,
       "lines": 1860,
@@ -124,6 +130,8 @@
     {
       "id": "hot-interpolated-strings",
       "path": "generated/hot-interpolated-strings.scss",
+      "seed": 1549123806,
+      "caseCount": 292,
       "targetBytes": 131072,
       "bytes": 131108,
       "lines": 876,
@@ -135,6 +143,8 @@
     {
       "id": "hot-tight-binary-expressions",
       "path": "generated/hot-tight-binary-expressions.scss",
+      "seed": 1549123806,
+      "caseCount": 1405,
       "targetBytes": 196608,
       "bytes": 196711,
       "lines": 2810,
@@ -147,6 +157,8 @@
     {
       "id": "hot-lists-maps-arguments",
       "path": "generated/hot-lists-maps-arguments.scss",
+      "seed": 1549123806,
+      "caseCount": 889,
       "targetBytes": 196608,
       "bytes": 196691,
       "lines": 2074,
@@ -155,6 +167,84 @@
         "hot.arguments": 296,
         "hot.list": 297,
         "hot.map": 296
+      }
+    },
+    {
+      "id": "hot-tight-operators",
+      "path": "generated/hot-tight-operators.scss",
+      "seed": 1549123806,
+      "caseCount": 2674,
+      "targetBytes": 131072,
+      "bytes": 131074,
+      "lines": 2675,
+      "sha256": "7b60cd69709d33abf2ff4e90cd200617b603b4ca229571b814e592eaad18b683",
+      "syntaxCounts": {
+        "hot.tight-operators": 2674
+      }
+    },
+    {
+      "id": "hot-operator-precedence",
+      "path": "generated/hot-operator-precedence.scss",
+      "seed": 1549123806,
+      "caseCount": 5241,
+      "targetBytes": 131072,
+      "bytes": 131073,
+      "lines": 5242,
+      "sha256": "3279714c0794b6dca7323c87b8bcfb51b65582471a2d4e7f5d3858ff61898d12",
+      "syntaxCounts": {
+        "hot.operator-precedence": 5241
+      }
+    },
+    {
+      "id": "hot-lists",
+      "path": "generated/hot-lists.scss",
+      "seed": 1549123806,
+      "caseCount": 5460,
+      "targetBytes": 131072,
+      "bytes": 131088,
+      "lines": 5461,
+      "sha256": "8b42be8b0249e3b6e28410f3f54f0c47f51df32bd7d194a9f06d51b82b783532",
+      "syntaxCounts": {
+        "hot.lists": 5460
+      }
+    },
+    {
+      "id": "hot-maps",
+      "path": "generated/hot-maps.scss",
+      "seed": 1549123806,
+      "caseCount": 3448,
+      "targetBytes": 131072,
+      "bytes": 131072,
+      "lines": 3449,
+      "sha256": "3ac5207e2a9be69329fe8775020f841c2ac326bc105dee511e16f51d5d99a5f2",
+      "syntaxCounts": {
+        "hot.maps": 3448
+      }
+    },
+    {
+      "id": "hot-arguments",
+      "path": "generated/hot-arguments.scss",
+      "seed": 1549123806,
+      "caseCount": 3854,
+      "targetBytes": 131072,
+      "bytes": 131100,
+      "lines": 3856,
+      "sha256": "8b7527767cd94b6bdb0ca261da962fcec4cceb490368fb3f4e010d8d5ce82de7",
+      "syntaxCounts": {
+        "hot.arguments-direct": 3854
+      }
+    },
+    {
+      "id": "hot-url-interpolation-direct",
+      "path": "generated/hot-url-interpolation-direct.scss",
+      "seed": 1549123806,
+      "caseCount": 3640,
+      "targetBytes": 131072,
+      "bytes": 131098,
+      "lines": 3642,
+      "sha256": "5d70060bc87fa512383cb007e2fb9ad252064acd24de975b7287353152d7462f",
+      "syntaxCounts": {
+        "hot.url-interpolation-direct": 3640
       }
     }
   ]
